@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EthCrow</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css' rel='stylesheet' type='text/css'>
+</head>
+<body class="container">
+  <h1 id="title">EthCrow</h1>
+  <div id="block"></div>
+  <div class="row">
+    <div class="col" id="make">
+      <h2>Make Transaction</h2><br>
+      <input type="text" id="receiver" placeholder="Send to" style="width:250px"><br>
+      <input type="number" id="amount" placeholder="Amount to be Paid" style="width:250px"><br>
+      <input type="number" id="deadline" placeholder="Deadline (days)" style="width:250px"><br>
+      <a href="#" onclick="makeTransaction()" class="btn btn-danger">Make Transaction</a><br>
+      <span id="transMsg"></span>
+    </div>
+    <div class="col" id="sentBlock">
+      <h2 style="width:500px;" id="sent">Check Sent Transaction</h2><br>
+      <input type="text" id="checkSent" placeholder="Address of receiver" style="width:400px"><br>
+      <a href="#" onclick="checkSentTransaction()" id="checkSentButt" class="btn btn-primary">Check Transaction</a>
+      <table class="table table-bordered" id="tableSent" style="display: none">
+        <thead>
+          <tr>
+            <th>Sent To</th>
+            <th>Amount</th>
+            <th>Deadline</th>
+            <th>Accepted</th>
+            <th>Withdrawal</th>
+            <th>Finalize</th>
+            <th>Dispute</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="tableAddress"></td>
+            <td id="tableAmount"></td>
+            <td id="tableDeadline"></td>
+            <td id="tableAccepted"></td>
+            <td id="tableWithdrawal"></td>
+            <td id="tableFinalize"></td>
+            <td id="tableDispute"></td>
+          </tr>
+        </tbody>
+      </table>
+      <h3 id="sendMsg" style="display:none"></h3>
+    </div>
+      <div class="col">
+        <h2 id="rec">Check Received Transaction</h2><br>
+        <input type="text" id="checkRec" placeholder="Address of sender" style="width:400px"><br>
+        <a href="#" onclick="checkRecTransaction()" class="btn btn-primary">Check Transaction</a>
+        <table class="table table-bordered" id="tableRec" style="display: none">
+          <thead>
+            <tr>
+              <th>Sent From</th>
+              <th>Amount</th>
+              <th>Deadline</th>
+              <th>Accepted</th>
+              <th>Withdrawal</th>
+              <th id="refundH" style="display:none">Refund</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="tableAddressR"></td>
+              <td id="tableAmountR"></td>
+              <td id="tableDeadlineR"></td>
+              <td id="tableAcceptedR"></td>
+              <td id="tableWithdrawalR"></td>
+              <td id="refund" style="display:none"></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3 id="recMsg" style="display:none"></h3>
+      </div>
+  </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js"></script>
+<script src="app.js"></script>
+</html>
