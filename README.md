@@ -9,4 +9,4 @@ EthCrow is currently hosted at https://nedodn.github.io
 In order to use this dapp, one must have Metamask enabled in their browser connected to the Ropsten test network.
 
 ## Tools Used
-EthCrow was built using the Truffle framework, JQuery, Node.js, and Webpack.
+EthCrow was built using the Truffle framework, JQuery, Node.js, Bootstrap, and Webpack.
