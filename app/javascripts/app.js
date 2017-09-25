@@ -17,34 +17,71 @@ window.makeTransaction = function(){
   let days = $("#deadline").val();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.makeTransaction(receiver, days, {value: web3.toWei(amount, 'ether'), from: web3.eth.accounts[0]}).then(function(v){
-      if(v){
-        $("#transMsg").html("<h3>Success</h3>");
-      }
+    contractInstance.makeTransaction(receiver, days, {gas: 1400000, value: web3.toWei(amount, 'ether'), from: web3.eth.accounts[0]}).then(function(v){
+      $("#transMsg").html("<h3>Success</h3>");
+      console.log(v);
+    });
+  });
+}
+
+window.checkSentTransactions = function(){
+  $("#tableSent").show();
+  $("#sentId").show();
+  $("#checkSentId").show();
+  $("#recId").hide();
+  $("#checkRecId").hide();
+  $("#tableRec").hide();
+  $("#tableRecTrans").hide();
+
+  $("#tableInfo").html("");
+
+  Escrow.deployed().then(function(contractInstance){
+    contractInstance.getSentTransactions.call({from: web3.eth.accounts[0]}).then(function(v){
+      let ids = v[0];
+      let addresses = v[1];
+
+      for(let i=0;i<ids.length;i++){
+        $("#tableInfo").append("<tr><td>" + ids[i].toString() + "</td><td>" + addresses[i] + "</td></tr>");
+      };
+    });
+  });
+}
+
+window.checkRecTransactions = function(){
+  $("#tableRec").show();
+  $("#recId").show();
+  $("#checkRecId").show();
+  $("#tableSent").hide();
+  $("#tableSentTrans").hide();
+  $("#sentId").hide();
+  $("#checkSentId").hide();
+
+  $("#tableInfoR").html("");
+
+  Escrow.deployed().then(function(contractInstance){
+    contractInstance.getRecTransactions.call({from: web3.eth.accounts[0]}).then(function(v){
+      let ids = v[0];
+      let addresses = v[1];
+
+      for(let i=0;i<ids.length;i++){
+        $("#tableInfoR").append("<tr><td>" + ids[i] + "</td><td>" + addresses[i] + "</td></tr>");
+      };
     });
   });
 }
 
 window.checkSentTransaction = function(){
-  let receiver = $("#checkSent").val();
+  $("#tableSentTrans").show();
+
+  let id = $("#sentId").val();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.getSentTransactionData.call(receiver, {from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.getSentTransactionData.call(id, {from: web3.eth.accounts[0]}).then(function(v){
       let amount = parseFloat(v[0].toString());
-
-      if(amount === 0){
-        $("#tableSent").hide();
-        $("#sendMsg").show();
-        $("#sendMsg").text("No Transaction Found");
-        return;
-      }
-      else{
-        $("#sendMsg").hide();
-        $("#tableSent").show();
-      }
 
       let deadline = parseFloat(v[1].toString());
 
+      $("#tableId").text(id);
       $("#tableAmount").text(web3.fromWei(amount,"ether"));
       if(v[2]){
         $("#tableAccepted").text("Accepted");
@@ -74,33 +111,25 @@ window.checkSentTransaction = function(){
         $("#tableWithdrawal").html("<a href='#' onclick='senderWithdrawal()' class='btn btn-default'>Withdraw</a>");
       }
       else{
-        $("#tableWithdrawal").text("Cannot Withdrawal");
+        $("#tableWithdrawal").text("Cannot Withdraw");
       }
-    $("#tableAddress").text(receiver);
   });
 });
 }
 
 
 window.checkRecTransaction = function(){
-  let sender = $("#checkRec").val();
+  $("#tableRecTrans").show();
+
+  let id = $("#recId").val();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.getRecTransactionData.call(sender, {from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.getRecTransactionData.call(id, {from: web3.eth.accounts[0]}).then(function(v){
+      $("#tableIdR").text(id);
       let amount = parseFloat(v[0].toString());
-      if(amount === 0){
-        $("#tableRec").hide();
-        $("#recMsg").show();
-        $("#recMsg").text("No Transaction Found");
-        return;
-      }
-      else{
-        $("#recMsg").hide();
-        $("#tableRec").show();
-      }
       let deadline = parseFloat(v[1].toString());
 
-      $("#tableAmountR").html(web3.fromWei(amount,"ether"));
+      $("#tableAmountR").text(web3.fromWei(amount,"ether"));
 
       if(v[2]){
         $("#tableAcceptedR").text("Accepted");
@@ -126,64 +155,68 @@ window.checkRecTransaction = function(){
         $("#refundH").hide();
         $("#refund").hide();
       }
-      $("#tableWithdrawalR").html("<a href='#' onclick='recWithdrawal()' class='btn btn-default'>Withdraw</a>")
 
-    $("#tableAddressR").text(sender);
+      if(v[3]){
+        $("#tableWithdrawalR").html("<a href='#' onclick='recWithdrawal()' class='btn btn-default'>Withdraw</a>")
+      }
+      else{
+        $("#tableWithdrawalR").text("Cannot Withdraw");
+      }
   });
 });
 }
 
 window.acceptTransaction = function(){
-  let sender = $("#tableAddressR").html();
+  let id = $("#tableIdR").text();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.acceptTransaction(sender, {gas: 140000, from: web3.eth.accounts[0]}).then(function(){
+    contractInstance.acceptTransaction(id, {gas: 140000, from: web3.eth.accounts[0]}).then(function(){
     });
   });
 }
 
 window.recWithdrawal = function(){
-  let sender = $("#tableAddressR").html();
+  let id = $("#tableIdR").text();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.receiverWithdrawal(sender, {gas: 140000, from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.receiverWithdrawal(id, {gas: 140000, from: web3.eth.accounts[0]}).then(function(v){
     });
   });
 }
 
 window.senderWithdrawal = function(){
-  let receiver = $("#tableAddress").html();
+  let id = $("#tableId").text();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.senderWithdrawal(receiver, {gas: 140000, from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.senderWithdrawal(id, {gas: 140000, from: web3.eth.accounts[0]}).then(function(v){
     });
   });
 }
 
 window.finalize = function(){
-  let receiver = $("#tableAddress").html();
+  let id = $("#tableId").text();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.finalizeTransaction(receiver, {gas: 140000, from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.finalizeTransaction(id, {gas: 140000, from: web3.eth.accounts[0]}).then(function(v){
     });
   });
 }
 
 window.dispute = function(){
-  let receiver = $("#tableAddress").text();
+  let id = $("#tableId").text();
   let days = $("#addDispute").val();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.disputeTransaction(receiver,days, {gas:140000, from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.disputeTransaction(id,days, {gas:140000, from: web3.eth.accounts[0]}).then(function(v){
     });
   });
 }
 
 window.refund = function(){
-  let sender = $("#tableAddressR").text();
+  let id = $("#tableIdR").text();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.refundTransaction(sender, {gas:140000, from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.refundTransaction(id, {gas:140000, from: web3.eth.accounts[0]}).then(function(v){
     });
   });
 }
