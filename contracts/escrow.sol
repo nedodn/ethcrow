@@ -4,100 +4,188 @@ contract Escrow{
 
   struct transaction{
     uint amount;
+    address sender;
+    address receiver;
+    uint id;
     uint deadline;
     bool accepted;
     bool senderCanWithdraw;
     bool receiverCanWithdraw;
-    bool finalized;
+    bool complete;
   }
 
-  mapping (address => mapping(address => transaction)) public transactions;
+  transaction[] public transactions;
+  uint numTransactions = 0;
+  mapping (address => uint[]) sentTransactions;
+  mapping (address => uint[]) recTransactions;
+
+  modifier isReceiver(uint id){
+    require(transactions[id].receiver == msg.sender);
+    _;
+  }
+
+  modifier isSender(uint id){
+    require(transactions[id].sender == msg.sender);
+    _;
+  }
+
+  modifier isNotComplete(uint id){
+    require(!transactions[id].complete);
+    _;
+  }
 
   function Escrow(){}
 
   function makeTransaction(address receiver, uint deadline) payable {
-    require(!transactions[msg.sender][receiver].accepted && msg.value != 0
-            && transactions[msg.sender][receiver].amount == 0);
+    require(msg.value != 0);
 
-    transactions[msg.sender][receiver].amount = msg.value;
-    transactions[msg.sender][receiver].deadline = deadline;
-    transactions[msg.sender][receiver].accepted = false;
-    transactions[msg.sender][receiver].senderCanWithdraw = true;
-    transactions[msg.sender][receiver].receiverCanWithdraw = false;
-    transactions[msg.sender][receiver].finalized = false;
+    transactions.push(transaction({
+      amount: msg.value,
+      sender: msg.sender,
+      receiver: receiver,
+      id: numTransactions,
+      deadline: deadline,
+      accepted: false,
+      senderCanWithdraw: true,
+      receiverCanWithdraw: false,
+      complete: false
+      }));
+
+    sentTransactions[msg.sender].push(numTransactions);
+    recTransactions[receiver].push(numTransactions);
+    numTransactions++;
   }
 
-  function acceptTransaction(address sender) {
-    require(!transactions[sender][msg.sender].accepted);
+  function acceptTransaction(uint id) isReceiver(id) isNotComplete(id) {
+    require(!transactions[id].accepted);
 
-    transactions[sender][msg.sender].accepted = true;
-    transactions[sender][msg.sender].senderCanWithdraw = false;
-    transactions[sender][msg.sender].deadline = now + (transactions[sender][msg.sender].deadline * 1 days);
+    transactions[id].accepted = true;
+    transactions[id].senderCanWithdraw = false;
+    transactions[id].deadline = now + (transactions[id].deadline * 1 days);
   }
 
-  function receiverWithdrawal(address sender) {
-    require((transactions[sender][msg.sender].receiverCanWithdraw) ||
-    ((now > transactions[sender][msg.sender].deadline) && (transactions[sender][msg.sender].accepted)));
+  function receiverWithdrawal(uint id) isReceiver(id) isNotComplete(id) {
+    require(transactions[id].receiverCanWithdraw ||
+    ((now > transactions[id].deadline) && (transactions[id].accepted)));
 
-    uint amount = transactions[sender][msg.sender].amount;
-    transactions[sender][msg.sender].amount = 0;
-    transactions[sender][msg.sender].accepted = false;
-    transactions[sender][msg.sender].deadline = 0;
+    uint amount = transactions[id].amount;
+    transactions[id].complete = true;
 
     msg.sender.transfer(amount);
   }
 
-  function senderWithdrawal(address receiver) {
-    require((transactions[msg.sender][receiver].senderCanWithdraw));
+  function senderWithdrawal(uint id) isSender(id) isNotComplete(id) {
+    require(transactions[id].senderCanWithdraw);
 
-    uint amount = transactions[msg.sender][receiver].amount;
-    transactions[msg.sender][receiver].amount = 0;
-    transactions[msg.sender][receiver].deadline = 0;
+    uint amount = transactions[id].amount;
+    transactions[id].complete = true;
 
     msg.sender.transfer(amount);
     }
 
-  function finalizeTransaction(address receiver) {
-    require(!transactions[msg.sender][receiver].finalized);
+  function finalizeTransaction(uint id) isSender(id) isNotComplete(id) {
+    require(!transactions[id].receiverCanWithdraw);
 
-    transactions[msg.sender][receiver].receiverCanWithdraw = true;
-    transactions[msg.sender][receiver].finalized = true;
+    transactions[id].receiverCanWithdraw = true;
+    transactions[id].senderCanWithdraw = false;
   }
 
-  function refundTransaction(address sender) {
-    require(transactions[sender][msg.sender].accepted);
+  function refundTransaction(uint id) isReceiver(id) isNotComplete(id) {
+    require(transactions[id].accepted);
 
-    transactions[sender][msg.sender].senderCanWithdraw = true;
+    transactions[id].receiverCanWithdraw = false;
+    transactions[id].senderCanWithdraw = true;
   }
 
-  function disputeTransaction(address receiver, uint addedTime) {
-    require(now <= transactions[msg.sender][receiver].deadline && !transactions[msg.sender][receiver].receiverCanWithdraw);
+  function disputeTransaction(uint id, uint addedTime) isSender(id) isNotComplete(id) {
+    require(now <= transactions[id].deadline && !transactions[id].receiverCanWithdraw);
 
-    transactions[msg.sender][receiver].deadline += (addedTime * 1 days);
+    transactions[id].deadline += (addedTime * 1 days);
   }
 
-  function getSentTransactionData(address receiver) constant returns(uint amount,
+  function getSentTransactionData(uint id) isSender(id) constant returns(uint amount,
                                                                      uint deadline,
                                                                      bool accepted,
                                                                      bool senderWithdrawl){
     return(
-      transactions[msg.sender][receiver].amount,
-      transactions[msg.sender][receiver].deadline,
-      transactions[msg.sender][receiver].accepted,
-      transactions[msg.sender][receiver].senderCanWithdraw
+      transactions[id].amount,
+      transactions[id].deadline,
+      transactions[id].accepted,
+      transactions[id].senderCanWithdraw
       );
   }
 
-  function getRecTransactionData(address sender) constant returns(uint amount,
+  function getRecTransactionData(uint id) isReceiver(id) constant returns(uint amount,
                                                                   uint deadline,
                                                                   bool accepted,
                                                                   bool receiverCanWithdraw){
+
+    bool withdraw;
+    if(transactions[id].receiverCanWithdraw || now > transactions[id].deadline){
+      withdraw = true;
+    }
+    else{
+      withdraw = false;
+    }
+
     return(
-      transactions[sender][msg.sender].amount,
-      transactions[sender][msg.sender].deadline,
-      transactions[sender][msg.sender].accepted,
-      transactions[sender][msg.sender].receiverCanWithdraw
+      transactions[id].amount,
+      transactions[id].deadline,
+      transactions[id].accepted,
+      withdraw
       );
+  }
+
+  function getSentTransactions() constant returns(uint[] ids,
+                                                  address[] addresses){
+    uint length = 0;
+    for(uint p = 0; p < sentTransactions[msg.sender].length; p++){
+      var z = transactions[sentTransactions[msg.sender][p]];
+      if(!z.complete){
+        length++;
+      }
+    }
+
+    uint[] memory returnIds = new uint[](length);
+    address[] memory returnAddresses = new address[](length);
+    uint num = 0;
+
+    for(uint i = 0; i < sentTransactions[msg.sender].length; i++){
+      var x = transactions[sentTransactions[msg.sender][i]];
+      if(!x.complete){
+        returnIds[num] = x.id;
+        returnAddresses[num] = x.receiver;
+        num++;
+      }
+    }
+
+    return(returnIds, returnAddresses);
+  }
+
+  function getRecTransactions() constant returns(uint[] ids,
+                                                  address[] addresses){
+  uint length = 0;
+  for(uint p = 0; p < sentTransactions[msg.sender].length; p++){
+    var z = transactions[sentTransactions[msg.sender][p]];
+      if(!z.complete){
+        length++;
+      }
+    }
+
+    uint[] memory returnIds = new uint[](length);
+    address[] memory returnAddresses = new address[](length);
+    uint num = 0;
+
+    for(uint i = 0; i < recTransactions[msg.sender].length; i++){
+      var x = transactions[recTransactions[msg.sender][i]];
+      if(!x.complete){
+      returnIds[num] = x.id;
+      returnAddresses[num] = x.receiver;
+      num++;
+      }
+    }
+
+    return(returnIds, returnAddresses);
   }
 
   function (){
