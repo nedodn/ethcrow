@@ -12,13 +12,14 @@ import escrow_artifacts from '../../build/contracts/Escrow.json'
 var Escrow = contract(escrow_artifacts);
 
 window.makeTransaction = function(){
+  $("#transMsg").hide();
   let receiver = $("#receiver").val();
   let amount = $("#amount").val();
   let days = $("#deadline").val();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.makeTransaction(receiver, days, {gas: 1400000, value: web3.toWei(amount, 'ether'), from: web3.eth.accounts[0]}).then(function(v){
-      $("#transMsg").html("<h3>Success</h3>");
+    contractInstance.makeTransaction(receiver, days, {gas: 240000, value: web3.toWei(amount, 'ether'), from: web3.eth.accounts[0]}).then(function(v){
+      $("#transMsg").show();
       console.log(v);
     });
   });
@@ -71,13 +72,18 @@ window.checkRecTransactions = function(){
 }
 
 window.checkSentTransaction = function(){
-  $("#tableSentTrans").show();
-
   let id = $("#sentId").val();
 
   Escrow.deployed().then(function(contractInstance){
     contractInstance.getSentTransactionData.call(id, {from: web3.eth.accounts[0]}).then(function(v){
       let amount = parseFloat(v[0].toString());
+      if(amount == 0){
+        $("#sendMsg").text("Transaction is either nonexistent or completed").show();
+        return;
+      }
+
+      $("#tableSentTrans").show();
+      $("#sendMsg").hide();
 
       let deadline = parseFloat(v[1].toString());
 
@@ -119,14 +125,19 @@ window.checkSentTransaction = function(){
 
 
 window.checkRecTransaction = function(){
-  $("#tableRecTrans").show();
-
   let id = $("#recId").val();
 
   Escrow.deployed().then(function(contractInstance){
     contractInstance.getRecTransactionData.call(id, {from: web3.eth.accounts[0]}).then(function(v){
       $("#tableIdR").text(id);
       let amount = parseFloat(v[0].toString());
+
+      if(amount == 0){
+        $("#recMsg").text("Transaction is either nonexistent or completed").show();
+        return;
+      }
+      $("#tableRecTrans").show();
+      $("recMsg").hide();
       let deadline = parseFloat(v[1].toString());
 
       $("#tableAmountR").text(web3.fromWei(amount,"ether"));
@@ -222,15 +233,15 @@ window.refund = function(){
 }
 
 $( document ).ready(function() {
-  if (typeof web3 !== 'undefined') {
+  // if (typeof web3 !== 'undefined') {
     console.warn("Using web3 detected from external source like Metamask")
     // Use Mist/MetaMask's provider
     window.web3 = new Web3(web3.currentProvider);
-  } else {
-    console.warn("No web3 detected. Falling back to http://localhost:8545. You should remove this fallback when you deploy live, as it's inherently insecure. Consider switching to Metamask for development. More info here: http://truffleframework.com/tutorials/truffle-and-metamask");
-    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-  }
+  // } else {
+  //   console.warn("No web3 detected. Falling back to http://localhost:8545. You should remove this fallback when you deploy live, as it's inherently insecure. Consider switching to Metamask for development. More info here: http://truffleframework.com/tutorials/truffle-and-metamask");
+  //   // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+  //   window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+  // }
 
   Escrow.setProvider(web3.currentProvider);
 });

@@ -59,48 +59,12 @@ h3 {
   padding-top: 20px;
 }
 
-#title{
-  margin: auto;
-  width: 22%;
-  display: block;
+#sentId {
+  display: none;
+  width: 250px;
 }
 
-#tableSent{
-  position: relative;
-  top: 10px;
-  right: 200px;
-}
-
-#tableRec{
-  position: relative;
-  top: 10px;
-  right: 200px;
-}
-
-#checkSent{
-  position: relative;
-  right: 60px;
-}
-
-#checkRec{
-  position: relative;
-  right: 60px;
-}
-
-#checSentButt{
-  position: relative;
-  left: 20px;
-  padding: 20px;
-}
-
-
-#sent{
-  position: relative;
-  right: 40px;
-}
-
-#rec {
-  position: relative;
-  right: 40px;
-  width:500px;
+#recId {
+  display: none;
+  width: 250px;
 }

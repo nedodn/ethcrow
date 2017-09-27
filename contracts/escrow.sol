@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
 
-contract Escrow{
+contract Escrow {
 
-  struct transaction{
+  struct transaction {
     uint amount;
     address sender;
     address receiver;
@@ -34,7 +34,7 @@ contract Escrow{
     _;
   }
 
-  function Escrow(){}
+  function Escrow() {}
 
   function makeTransaction(address receiver, uint deadline) payable {
     require(msg.value != 0);
@@ -106,7 +106,7 @@ contract Escrow{
   function getSentTransactionData(uint id) isSender(id) constant returns(uint amount,
                                                                      uint deadline,
                                                                      bool accepted,
-                                                                     bool senderWithdrawl){
+                                                                     bool senderWithdrawl) {
     return(
       transactions[id].amount,
       transactions[id].deadline,
@@ -118,13 +118,13 @@ contract Escrow{
   function getRecTransactionData(uint id) isReceiver(id) constant returns(uint amount,
                                                                   uint deadline,
                                                                   bool accepted,
-                                                                  bool receiverCanWithdraw){
+                                                                  bool receiverCanWithdraw) {
 
     bool withdraw;
-    if(transactions[id].receiverCanWithdraw || now > transactions[id].deadline){
+    if (transactions[id].receiverCanWithdraw || now > transactions[id].deadline) {
       withdraw = true;
     }
-    else{
+    else {
       withdraw = false;
     }
 
@@ -137,11 +137,11 @@ contract Escrow{
   }
 
   function getSentTransactions() constant returns(uint[] ids,
-                                                  address[] addresses){
+                                                  address[] addresses) {
     uint length = 0;
-    for(uint p = 0; p < sentTransactions[msg.sender].length; p++){
+    for (uint p = 0; p < sentTransactions[msg.sender].length; p++){
       var z = transactions[sentTransactions[msg.sender][p]];
-      if(!z.complete){
+      if (!z.complete) {
         length++;
       }
     }
@@ -150,9 +150,9 @@ contract Escrow{
     address[] memory returnAddresses = new address[](length);
     uint num = 0;
 
-    for(uint i = 0; i < sentTransactions[msg.sender].length; i++){
+    for (uint i = 0; i < sentTransactions[msg.sender].length; i++) {
       var x = transactions[sentTransactions[msg.sender][i]];
-      if(!x.complete){
+      if (!x.complete) {
         returnIds[num] = x.id;
         returnAddresses[num] = x.receiver;
         num++;
@@ -163,11 +163,11 @@ contract Escrow{
   }
 
   function getRecTransactions() constant returns(uint[] ids,
-                                                  address[] addresses){
+                                                  address[] addresses) {
   uint length = 0;
-  for(uint p = 0; p < sentTransactions[msg.sender].length; p++){
+  for (uint p = 0; p < sentTransactions[msg.sender].length; p++) {
     var z = transactions[sentTransactions[msg.sender][p]];
-      if(!z.complete){
+      if (!z.complete) {
         length++;
       }
     }
@@ -176,9 +176,9 @@ contract Escrow{
     address[] memory returnAddresses = new address[](length);
     uint num = 0;
 
-    for(uint i = 0; i < recTransactions[msg.sender].length; i++){
+    for (uint i = 0; i < recTransactions[msg.sender].length; i++) {
       var x = transactions[recTransactions[msg.sender][i]];
-      if(!x.complete){
+      if (!x.complete) {
       returnIds[num] = x.id;
       returnAddresses[num] = x.receiver;
       num++;
@@ -188,7 +188,7 @@ contract Escrow{
     return(returnIds, returnAddresses);
   }
 
-  function (){
-    throw;
+  function () {
+    revert();
   }
 }
