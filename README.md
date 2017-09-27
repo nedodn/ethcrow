@@ -1,29 +1,12 @@
-# truffle-init-webpack
-Example webpack project with Truffle. Includes contracts, migrations, tests, user interface and webpack build pipeline.
+# EthCrow
+EthCrow is a decentralized escrow service utilizing the Ethereum blockchain and its smart contract abilities. EthCrow allows users to create an escrow transaction to anyone with an Ethereum wallet address that can be resolved with a deadline when the receiver can withdraw, finalization of the transaction by the sender, or a refund by the receiver. In the case of a dispute, the sender may add days to the deadline, though neither sender nor receiver can withdraw unless the other has given their permission, except in the case that the deadline has been passed in which the receiver may withdraw the Ether.
 
-## Usage
+EthCrow is currently hosted at https://nedodn.github.io/ethcrow
 
-To initialize a project with this example, run `truffle init webpack` inside an empty directory.
+## EthCrow is currently only operable on the Rinkeby test network.
 
-## Building and the frontend
+# Usage
+In order to use this dapp, one must have Metamask enabled in their browser connected to the Rinkeby test network.
 
-1. First run `truffle compile`, then run `truffle migrate` to deploy the contracts onto your network of choice (default "development").
-1. Then run `npm run dev` to build the app and serve it on http://localhost:8080
-
-## Possible upgrades
-
-* Use the webpack hotloader to sense when contracts or javascript have been recompiled and rebuild the application. Contributions welcome!
-
-## Common Errors
-
-* **Error: Can't resolve '../build/contracts/MetaCoin.json'**
-
-This means you haven't compiled or migrated your contracts yet. Run `truffle compile` and `truffle migrate` first.
-
-Full error:
-
-```
-ERROR in ./app/main.js
-Module not found: Error: Can't resolve '../build/contracts/MetaCoin.json' in '/Users/tim/Documents/workspace/Consensys/test3/app'
- @ ./app/main.js 11:16-59
-```
+## Tools Used
+EthCrow was built using the Truffle framework, JQuery, Node.js, Bootstrap, and Webpack.
