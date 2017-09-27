@@ -3,10 +3,10 @@ EthCrow is a decentralized escrow service utilizing the Ethereum blockchain and 
 
 EthCrow is currently hosted at https://nedodn.github.io/ethcrow
 
-## EthCrow is currently only operable on the Ropsten test network.
+## EthCrow is currently only operable on the Rinkeby test network.
 
 # Usage
-In order to use this dapp, one must have Metamask enabled in their browser connected to the Ropsten test network.
+In order to use this dapp, one must have Metamask enabled in their browser connected to the Rinkeby test network.
 
 ## Tools Used
 EthCrow was built using the Truffle framework, JQuery, Node.js, Bootstrap, and Webpack.
