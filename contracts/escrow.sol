@@ -120,12 +120,9 @@ contract Escrow {
                                                                   bool accepted,
                                                                   bool receiverCanWithdraw) {
 
-    bool withdraw;
+    bool withdraw = false;
     if (transactions[id].receiverCanWithdraw || now > transactions[id].deadline) {
       withdraw = true;
-    }
-    else {
-      withdraw = false;
     }
 
     return(
