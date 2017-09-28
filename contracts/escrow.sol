@@ -4,6 +4,7 @@ contract Escrow {
 
   struct transaction {
     uint amount;
+    uint collateral;
     address sender;
     address receiver;
     uint id;
@@ -18,6 +19,8 @@ contract Escrow {
   uint numTransactions = 0;
   mapping (address => uint[]) sentTransactions;
   mapping (address => uint[]) recTransactions;
+
+  address owner;
 
   modifier isReceiver(uint id){
     require(transactions[id].receiver == msg.sender);
@@ -34,13 +37,16 @@ contract Escrow {
     _;
   }
 
-  function Escrow() {}
+  function Escrow() {
+    owner = msg.sender;
+  }
 
-  function makeTransaction(address receiver, uint deadline) payable {
+  function makeTransaction(address receiver, uint deadline, uint collateral) payable {
     require(msg.value != 0);
 
     transactions.push(transaction({
       amount: msg.value,
+      collateral: collateral,
       sender: msg.sender,
       receiver: receiver,
       id: numTransactions,
@@ -56,8 +62,8 @@ contract Escrow {
     numTransactions++;
   }
 
-  function acceptTransaction(uint id) isReceiver(id) isNotComplete(id) {
-    require(!transactions[id].accepted);
+  function acceptTransaction(uint id) payable isReceiver(id) isNotComplete(id) {
+    require(!transactions[id].accepted && msg.value == transactions[id].collateral);
 
     transactions[id].accepted = true;
     transactions[id].senderCanWithdraw = false;
@@ -68,10 +74,14 @@ contract Escrow {
     require(transactions[id].receiverCanWithdraw ||
     ((now > transactions[id].deadline) && (transactions[id].accepted)));
 
-    uint amount = transactions[id].amount;
+    uint collateral = transactions[id].collateral;
+    uint fee = transactions[id].amount / 500;
+    uint amount = transactions[id].amount - fee;
     transactions[id].complete = true;
 
     msg.sender.transfer(amount);
+    owner.transfer(fee);
+    transactions[id].receiver.transfer(collateral);
   }
 
   function senderWithdrawal(uint id) isSender(id) isNotComplete(id) {
@@ -79,6 +89,11 @@ contract Escrow {
 
     uint amount = transactions[id].amount;
     transactions[id].complete = true;
+
+    if (transactions[id].accepted) {
+      uint collateral = transactions[id].collateral;
+      transactions[id].receiver.transfer(collateral);
+    }
 
     msg.sender.transfer(amount);
     }
@@ -106,19 +121,25 @@ contract Escrow {
   function getSentTransactionData(uint id) isSender(id) constant returns(uint amount,
                                                                      uint deadline,
                                                                      bool accepted,
-                                                                     bool senderWithdrawl) {
+                                                                     bool senderWithdrawl,
+                                                                     uint collateral,
+                                                                     bool complete) {
     return(
       transactions[id].amount,
       transactions[id].deadline,
       transactions[id].accepted,
-      transactions[id].senderCanWithdraw
+      transactions[id].senderCanWithdraw,
+      transactions[id].collateral,
+      transactions[id].complete
       );
   }
 
   function getRecTransactionData(uint id) isReceiver(id) constant returns(uint amount,
                                                                   uint deadline,
                                                                   bool accepted,
-                                                                  bool receiverCanWithdraw) {
+                                                                  bool receiverCanWithdraw,
+                                                                  uint collateral,
+                                                                  bool complete) {
 
     bool withdraw = false;
     if (transactions[id].receiverCanWithdraw || now > transactions[id].deadline) {
@@ -129,7 +150,9 @@ contract Escrow {
       transactions[id].amount,
       transactions[id].deadline,
       transactions[id].accepted,
-      withdraw
+      withdraw,
+      transactions[id].collateral,
+      transactions[id].complete
       );
   }
 
