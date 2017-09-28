@@ -16,9 +16,10 @@ window.makeTransaction = function(){
   let receiver = $("#receiver").val();
   let amount = $("#amount").val();
   let days = $("#deadline").val();
+  let collateral = $("#collateral").val();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.makeTransaction(receiver, days, {gas: 240000, value: web3.toWei(amount, 'ether'), from: web3.eth.accounts[0]}).then(function(v){
+    contractInstance.makeTransaction(receiver, days, web3.toWei(collateral, 'ether'), {value: web3.toWei(amount, 'ether'), from: web3.eth.accounts[0]}).then(function(v){
       $("#transMsg").show();
       console.log(v);
     });
@@ -33,6 +34,8 @@ window.checkSentTransactions = function(){
   $("#checkRecId").hide();
   $("#tableRec").hide();
   $("#tableRecTrans").hide();
+  $("#sendMsg").hide();
+  $("#recMsg").hide();
 
   $("#tableInfo").html("");
 
@@ -56,6 +59,8 @@ window.checkRecTransactions = function(){
   $("#tableSentTrans").hide();
   $("#sentId").hide();
   $("#checkSentId").hide();
+  $("#sendMsg").hide();
+  $("#recMsg").hide();
 
   $("#tableInfoR").html("");
 
@@ -77,7 +82,8 @@ window.checkSentTransaction = function(){
   Escrow.deployed().then(function(contractInstance){
     contractInstance.getSentTransactionData.call(id, {from: web3.eth.accounts[0]}).then(function(v){
       let amount = parseFloat(v[0].toString());
-      if(amount == 0){
+      if(amount == 0 || v[5]){
+        $("#tableSentTrans").hide();
         $("#sendMsg").text("Transaction is either nonexistent or completed").show();
         return;
       }
@@ -119,6 +125,9 @@ window.checkSentTransaction = function(){
       else{
         $("#tableWithdrawal").text("Cannot Withdraw");
       }
+
+      let collateral = parseFloat(v[4].toString());
+      $("#tableCollateral").text(web3.fromWei(collateral, 'ether'));
   });
 });
 }
@@ -132,7 +141,8 @@ window.checkRecTransaction = function(){
       $("#tableIdR").text(id);
       let amount = parseFloat(v[0].toString());
 
-      if(amount == 0){
+      if(amount == 0 || v[5]){
+        $("#tableRecTrans").hide();
         $("#recMsg").text("Transaction is either nonexistent or completed").show();
         return;
       }
@@ -173,15 +183,19 @@ window.checkRecTransaction = function(){
       else{
         $("#tableWithdrawalR").text("Cannot Withdraw");
       }
+
+      let collateral = parseFloat(v[4].toString());
+      $("#tableCollateralR").text(web3.fromWei(collateral, 'ether'));
   });
 });
 }
 
 window.acceptTransaction = function(){
   let id = $("#tableIdR").text();
+  let collateral = $("#tableCollateralR").text();
 
   Escrow.deployed().then(function(contractInstance){
-    contractInstance.acceptTransaction(id, {gas: 140000, from: web3.eth.accounts[0]}).then(function(){
+    contractInstance.acceptTransaction(id, {gas: 140000, value: web3.toWei(collateral, 'ether'), from: web3.eth.accounts[0]}).then(function(){
     });
   });
 }
@@ -233,15 +247,15 @@ window.refund = function(){
 }
 
 $( document ).ready(function() {
-  // if (typeof web3 !== 'undefined') {
+  if (typeof web3 !== 'undefined') {
     console.warn("Using web3 detected from external source like Metamask")
-    // Use Mist/MetaMask's provider
+    //Use Mist/MetaMask's provider
     window.web3 = new Web3(web3.currentProvider);
-  // } else {
-  //   console.warn("No web3 detected. Falling back to http://localhost:8545. You should remove this fallback when you deploy live, as it's inherently insecure. Consider switching to Metamask for development. More info here: http://truffleframework.com/tutorials/truffle-and-metamask");
-  //   // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-  //   window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-  // }
+  } else {
+    console.warn("No web3 detected. Falling back to http://localhost:8545. You should remove this fallback when you deploy live, as it's inherently insecure. Consider switching to Metamask for development. More info here: http://truffleframework.com/tutorials/truffle-and-metamask");
+    // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+    window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+  }
 
   Escrow.setProvider(web3.currentProvider);
 });
