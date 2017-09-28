@@ -10,9 +10,10 @@
   <div class="row">
     <div class="row" id="make">
       <h2>Make Transaction</h2><br>
-      <input type="text" id="receiver" placeholder="Send to" style="width:250px"><br>
-      <input type="number" id="amount" placeholder="Amount to be Paid" style="width:250px"><br>
-      <input type="number" id="deadline" placeholder="Deadline (days)" style="width:250px"><br>
+      <input type="text" id="receiver" placeholder="Send to" style="width:400px"><br>
+      <input type="number" id="amount" placeholder="Amount to be Paid" style="width:400px"><br>
+      <input type="number" id="deadline" placeholder="Deadline (days)" style="width:400px"><br>
+      <input type="number" id="collateral" placeholder="How Much Collateral You Want Them to Put Up" style="width:400px"><br>
       <a href="#" onclick="makeTransaction()" class="btn btn-danger">Make Transaction</a><br>
       <span id="transMsg" style="display: none"><h2>Done</h2></span>
     </div>
@@ -36,6 +37,7 @@
           <th>Id</th>
           <th>Amount</th>
           <th>Deadline</th>
+          <th>Receiver Collateral</th>
           <th>Accepted</th>
           <th>Withdrawal</th>
           <th>Finalize</th>
@@ -46,6 +48,7 @@
             <td id="tableId"></th>
             <td id="tableAmount"></td>
             <td id="tableDeadline"></td>
+            <td id="tableCollateral"></td>
             <td id="tableAccepted"></td>
             <td id="tableWithdrawal"></td>
             <td id="tableFinalize"></td>
@@ -76,6 +79,7 @@
           <th>Id</th>
           <th>Amount</th>
           <th>Deadline</th>
+          <th>Collateral</th>
           <th>Accepted</th>
           <th>Withdrawal</th>
           <th id="refundH" style="display:none">Refund</th>
@@ -85,6 +89,7 @@
             <td id="tableIdR"></td>
             <td id="tableAmountR"></td>
             <td id="tableDeadlineR"></td>
+            <td id="tableCollateralR"></td>
             <td id="tableAcceptedR"></td>
             <td id="tableWithdrawalR"></td>
             <td id="refund" style="display:none"></td>
